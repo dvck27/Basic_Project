@@ -1,0 +1,17 @@
+# Windows
+desktop.ini
+Thumbs.db
+ehthumbs.db
+$RECYCLE.BIN/
+
+# Editores / IDE
+.vscode/
+.idea/
+*.swp
+
+# Secretos / credenciales (NUNCA versionar)
+Token_*.txt
+*token*.txt
+*.pat
+.env
+*.key
