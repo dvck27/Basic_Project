@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>PAI Auto</title>
+  <style>
+    :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#17202a;background:#f6f8fb}
+    *{box-sizing:border-box}body{margin:0}main{max-width:1120px;margin:auto;padding:32px 20px 60px}
+    header{display:flex;justify-content:space-between;align-items:end;margin-bottom:28px}h1{font-size:28px;margin:0}.muted{color:#6b7280;font-size:13px}
+    .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:18px}.card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:20px;box-shadow:0 6px 28px rgba(16,24,40,.04)}
+    h2{font-size:16px;margin:0 0 16px}.flow{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 20px}.node{font-size:12px;padding:7px 10px;border:1px solid #dbe3ed;border-radius:999px;background:#fafcff}.arrow{align-self:center;color:#9ca3af}
+    label{display:block;font-size:12px;font-weight:650;margin:11px 0 5px}input,select{width:100%;padding:10px 11px;border:1px solid #d1d5db;border-radius:9px;background:#fff;font:inherit}input[type=file]{padding:8px}
+    button{border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}.primary{background:#111827;color:#fff}.secondary{background:#eef2f7;color:#111827}.danger{background:#fff1f2;color:#be123c;border:1px solid #fecdd3;padding:10px 12px;border-radius:10px;margin-bottom:14px}
+    table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;padding:9px 7px;border-bottom:1px solid #eef0f3}th{color:#6b7280;font-weight:650}.badge{font-size:11px;padding:4px 7px;border-radius:999px;background:#eef2f7}.SUCCESS{background:#dcfce7;color:#166534}.FAILED{background:#fee2e2;color:#991b1b}.SKIPPED{background:#fef3c7;color:#92400e}
+    details{border-top:1px solid #eef0f3;margin-top:14px;padding-top:12px}summary{cursor:pointer;font-weight:650;font-size:13px}.split{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions{margin-top:16px;display:flex;gap:8px;align-items:center}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}.kpi{padding:11px;border-radius:10px;background:#f8fafc}.kpi b{display:block;font-size:18px}.runs a{color:inherit;text-decoration:none}.runs tr:hover{background:#fafafa}
+    @media(max-width:800px){.grid{grid-template-columns:1fr}.split{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body><main>
+<header><div><h1>PAI Auto</h1><div class="muted">Motor local · administrador único · flujo de principio a fin</div></div><div class="muted">{{ runtime_dir }} · real máx. {{ real_max_rows }} fila(s)</div></header>
+{% if error %}<div class="danger">{{ error }}</div>{% endif %}
+<div class="grid">
+<section class="card">
+  <h2>Flujo de trabajo</h2>
+  <div class="flow"><span class="node">Excel</span><span class="arrow">→</span><span class="node">Descomponer</span><span class="arrow">→</span><span class="node">Validar</span><span class="arrow">→</span><span class="node">PAIWEB</span><span class="arrow">→</span><span class="node">Verificar</span><span class="arrow">→</span><span class="node">Auditar</span></div>
+  <form action="/import" method="post" enctype="multipart/form-data">
+    <label>1. Registro Diario SIS</label><input type="file" name="file" accept=".xlsx" required>
+    <div class="actions"><button class="secondary" type="submit">Analizar archivo</button></div>
+  </form>
+  {% if preview %}
+  <div class="kpis"><div class="kpi"><b>{{ preview.total_source_rows }}</b><span class="muted">filas fuente</span></div><div class="kpi"><b>{{ preview.valid_rows }}</b><span class="muted">filas útiles</span></div><div class="kpi"><b>{{ preview.records|length }}</b><span class="muted">aplicaciones</span></div><div class="kpi"><b>{{ preview.issues|length }}</b><span class="muted">incidencias</span></div></div>
+  <form action="/run" method="post">
+    <input type="hidden" name="source" value="{{ source }}">
+    <div class="split"><div><label>Fila inicial</label><input type="number" name="start_row" value="16" min="16"></div><div><label>Tamaño del lote (filas)</label><select name="batch_size"><option>1</option><option selected>20</option><option>50</option><option>100</option></select></div></div>
+    <label>Modo</label><select name="mode"><option value="simulator" selected>Simulador seguro</option><option value="real">PAIWEB real</option></select>
+    <details><summary>Valores administrados por el operador</summary><div class="split"><div><label>Número de unidades</label><input name="units" placeholder="Defínelo para modo real"></div><div><label>Sitio anatómico</label><input name="anatomical_site" placeholder="Defínelo para modo real"></div><div><label>Tipo de aplicación</label><input name="application_type" placeholder="Literal exacto de PAIWEB"></div><div><label>Sector económico</label><input name="economic_sector" placeholder="Literal exacto de PAIWEB"></div></div></details>
+    <details><summary>Conexión PAIWEB real</summary><label>URL</label><input name="base_url" value="https://paiweb2.paiweb.gov.co"><div class="split"><div><label>Tipo ID de la cuenta</label><input name="id_type" value="Cédula de ciudadanía"></div><div><label>Sede exacta</label><input name="site"></div><div><label>Usuario</label><input name="username" autocomplete="off"></div><div><label>Contraseña</label><input type="password" name="password" autocomplete="new-password"></div></div><label>Token OAuth Gmail (ruta local, no se guarda en Git)</label><input name="gmail_token_file" placeholder="C:\\...\\token.json"><label>Consulta Gmail</label><input name="gmail_query" value="newer_than:10m"><label style="display:flex;align-items:center;gap:8px;font-weight:600"><input type="checkbox" name="confirm_real" value="true" style="width:auto">Confirmo que, si selecciono PAIWEB real, esta ejecución puede registrar datos.</label><div class="muted">Por defecto el modo real está limitado a {{ real_max_rows }} fila(s). El simulador permite 1/20/50/100.</div></details>
+    <div class="actions"><button class="primary" type="submit">▶ Ejecutar flujo</button><span class="muted">Una aplicación fallida no detiene el lote.</span></div>
+  </form>
+  {% if preview.issues %}<details><summary>Incidencias del archivo ({{ preview.issues|length }})</summary><table><tr><th>Fila</th><th>Código</th><th>Detalle</th></tr>{% for issue in preview.issues[:50] %}<tr><td>{{ issue.source_row }}</td><td>{{ issue.code }}</td><td>{{ issue.message }}</td></tr>{% endfor %}</table></details>{% endif %}
+  {% endif %}
+</section>
+<section class="card runs"><h2>Ejecuciones recientes</h2><table><tr><th>ID</th><th>Modo</th><th>Lote</th><th>Estado</th></tr>{% for run in runs %}<tr><td><a href="/runs/{{ run.id }}">{{ run.id }}</a></td><td>{{ run.mode }}</td><td>{{ run.batch_size }}</td><td><span class="badge">{{ run.state }}</span></td></tr>{% else %}<tr><td colspan="4" class="muted">Aún no hay ejecuciones.</td></tr>{% endfor %}</table></section>
+</div>
+{% if items is defined %}<section class="card" style="margin-top:18px"><h2>Resultado · {{ selected_run }}</h2><table><tr><th>Fila</th><th>Paciente</th><th>Biológico</th><th>Dosis</th><th>Lote</th><th>Estado</th><th>Detalle</th></tr>{% for item in items %}<tr><td>{{ item.source_row }}</td><td>{{ item.document_number }}</td><td>{{ item.biologic_name }}</td><td>{{ item.dose }}</td><td>{{ item.lot }}</td><td><span class="badge {{ item.status }}">{{ item.status }}</span></td><td>{{ item.message or item.remote_ref }}</td></tr>{% endfor %}</table></section>{% endif %}
+</main></body></html>

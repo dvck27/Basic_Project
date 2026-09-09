@@ -1,49 +1,49 @@
-# Maintenance Checklist — Basic_Project
+# Maintenance Checklist — PAI Auto
 
-> Mantiene alineados **código, specs, tests, README, Context Pack y Decision Log**. Objetivo: cero contradicciones
-> entre fuentes y continuidad durable.
+## Fuentes de verdad
+Código → tests/specs → `docs/CONTEXT_PACK.md` → `README.md` → `docs/DECISION_LOG.md`.
 
-## Fuentes de verdad (orden)
-Código actual → specs/tests → `docs/CONTEXT_PACK.md` → `README.md` → `docs/DECISION_LOG.md` → memoria operacional → chat.
+## Antes de cambiar comportamiento
+- Lee `README.md`, `docs/CONTEXT_PACK.md` y `specs/WORKFLOW.md`.
+- Identifica si el cambio toca importación, idempotencia, browser gateway o escritura real.
+- Si cambia arquitectura/persistencia/seguridad, crea o actualiza un PRP.
 
-## Regla de almacenamiento canónico
-- Verdad durable del proyecto → `docs/`.
-- Capa portable multiagente (skills/prps/runbooks/índice de memoria) → `docs/agent_factory/`.
-- Espejo Claude Code → `.claude/` (nunca fuente única).
-- Contratos técnicos → `specs/` (cuando existan).
-- **Secretos → en ningún archivo versionado.**
+## Invariantes que no deben romperse
+- 222 columnas y hoja `Vacunación SIS` para el contrato V0.
+- Lotes contados por **filas**, no aplicaciones.
+- Una fila puede tener varias aplicaciones.
+- `processed` se escribe solo después de `gateway.verify()`.
+- Una aplicación fallida no cancela las demás.
+- Modo real no tiene defaults implícitos para unidades/sitio/tipo/sector.
+- Contraseña PAIWEB no se persiste.
+- LLM/fuzzy matching no decide identidad, dosis, lote ni campos clínicos.
+- `runtime/` y archivos reales nunca se versionan.
 
-## Antes de cambiar código
-1. Lee `README.md`, `docs/CONTEXT_PACK.md` y la spec relevante (si existe).
-2. Inspecciona el código y localiza los tests afectados.
-3. Si el cambio es grande → escribe un **PRP** (`docs/agent_factory/prps/prp-base.md`).
+## Cuando cambia PAIWEB
+- No parches selectores por intuición.
+- Contrasta primero con evidencia actual.
+- Añade test o fixture sintético que reproduzca la variante.
+- Actualiza `specs/WORKFLOW.md` si cambia el flujo.
+- Registra cambios de contrato durable en Decision Log.
 
-## Cuando cambia el código / comportamiento
-Actualiza, según aplique: código → tests → spec → `README` → `CONTEXT_PACK` → `DECISION_LOG`. Declara gaps pendientes.
+## Cuando cambia el Excel
+- Si la estructura deja de ser 222 columnas, crea una **nueva versión de contrato**; no relajes silenciosamente V0.
+- Conserva por separado valor original y normalización cuando se añada una transformación.
+- No introducir coincidencia difusa para resolver columnas clínicas.
 
-## Cuándo actualizar el README
-Cambian: prerequisitos, dependencias, `.env.example`, comandos de arranque/test/build/lint, URLs/puertos,
-entrypoints, flujos principales o límites conocidos.
+## Validación antes de PR
+```text
+python -m pytest
+ruff check .
+GET / -> 200
+```
+Si Ruff no está instalado en el entorno actual, decláralo y ejecuta al menos compile/smoke; CI/entorno dev debe instalar `.[dev]`.
 
-## Cuándo actualizar el Context Pack
-Cambian: propósito, arquitectura, entrypoints, estructura, modelo de memoria, orden de lectura, dependencias
-críticas, configuración durable, flujo de publicación/entorno o riesgos duraderos.
+## Validación real
+- Primera escritura: 1 fila.
+- Confirmar paciente, biológico, dosis, lote y acuse posterior.
+- Repetir la misma fila y comprobar que la idempotencia local la omita.
+- Solo después subir `PAI_AUTO_REAL_MAX_ROWS` a 20; luego 50/100 conforme a evidencia.
 
-## Cuándo registrar en el Decision Log
-Decisiones sobre: arquitectura, persistencia, seguridad, testing, proveedores/costos, estructura del repo,
-onboarding, migraciones, compatibilidad, contrato de agentes o el flujo de publicación.
-
-## Cuándo tocar la capa de agentes
-Cambia el flujo de agentes o el read order → actualiza `AGENTS.md`, los adaptadores y `docs/agent_factory/runbooks/`.
-Aprendes de un fallo → skill `postmortem-learning` + Decision Log. `.claude/` desincronizado de la fuente canónica → skill `repo-change-sync`.
-
-## Mínimos SDD / BDD / TDD
-- **SDD:** si hay specs, son la fuente técnica; si no, deriva una mini-spec del código y declara vacíos.
-- **BDD:** para cambios funcionales, solo los escenarios esenciales (`Given/When/Then`).
-- **TDD:** define las pruebas clave (comportamiento, entrada, salida esperada); no generes suites innecesarias.
-
-## Verificación periódica
-- ¿README, Context Pack y Decision Log se contradicen? → corregir.
-- ¿Docs mencionan comandos/archivos inexistentes? → marcar `Por definir` o eliminar.
-- ¿Hay secretos colados en algún archivo versionado? → remediar (revocar + purgar).
-- ¿`.claude/skills` divergió de `docs/agent_factory/skills`? → resincronizar.
+## Documentación
+Actualizar según aplique: código → tests → `specs/WORKFLOW.md` → README → Context Pack → Decision Log.
