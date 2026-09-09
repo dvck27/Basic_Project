@@ -3,6 +3,28 @@
 > Decisiones técnicas **durables**. No registrar cambios triviales. Formato por entrada (más reciente arriba):
 > Contexto · Decisión · Motivo · Impacto · Alternativas · Documentos/código afectados.
 
+## 2026-09-08 — Adoptar PAI Auto como aplicación y mantener el flujo compacto
+- **Contexto:** `Basic_Project` era solo bootstrap. Se necesita una versión nueva del sistema de vacunación, funcional para pruebas, sin heredar la complejidad institucional de `vacunacion-paiweb`.
+- **Decisión:** Python/FastAPI/Jinja2 + SQLite + openpyxl; Playwright/Gmail OAuth como extras reales. Un solo administrador. Lotes de 1/20/50/100 **filas**. Simulador y gateway real comparten la misma interfaz.
+- **Motivo:** máxima portabilidad y un único proceso local, preservando solo idempotencia, verificación posterior y contrato del dato.
+- **Impacto:** el repositorio deja de ser agnóstico y pasa a tener una aplicación Python. `runtime/` es local; no se introducen Docker, Redis, SQL Server ni servicios obligatorios.
+- **Alternativas:** recortar el Django original, usar n8n como runtime o introducir un LLM en el camino crítico — descartadas para V0.
+- **Afectados:** `src/pai_auto/**`, `tests/**`, `specs/WORKFLOW.md`, `README.md`, `docs/CONTEXT_PACK.md`.
+
+## 2026-09-08 — Escritura real requiere una aprobación de corrida, no gates distribuidos
+- **Contexto:** el original no había ejecutado escrituras reales y tenía múltiples gates/roles. El nuevo sistema debe tener un solo administrador sin perder el control sobre una mutación clínica.
+- **Decisión:** una confirmación explícita en UI al inicio; valores operativos obligatorios sin defaults implícitos; `PAI_AUTO_REAL_MAX_ROWS=1` hasta validar una fila y luego configurable hasta 100 sin cambiar código.
+- **Motivo:** quitar el cuello de botella humano del procesamiento normal sin convertir una prueba no validada en una escritura masiva accidental.
+- **Impacto:** simulador usa 1/20/50/100 desde el primer día; real puede escalar por configuración local después de la primera validación.
+- **Afectados:** `src/pai_auto/app.py`, `templates/index.html`, `README.md`, `specs/WORKFLOW.md`.
+
+## 2026-09-08 — El LLM no decide datos clínicos
+- **Contexto:** se considera un LLM local como nodo tipo n8n.
+- **Decisión:** dejarlo fuera de V0 y del camino determinístico. Futuro uso: diagnóstico/explicación/asistencia.
+- **Motivo:** identidad, dosis, lote y campos clínicos deben ser reproducibles y auditables.
+- **Impacto:** el motor funciona en equipos estándar sin descargar modelos y no depende de inferencia probabilística.
+- **Afectados:** arquitectura y `specs/WORKFLOW.md`.
+
 ## 2026-08-04 — Migrar la publicación canónica de Gitea a GitHub
 - **Contexto:** la carpeta agent-ready se publicará como repositorio `dvck27/Basic_Project`; el remoto de GitHub existe y está vacío, y esta copia local todavía no tenía metadatos Git.
 - **Decisión:** usar `https://github.com/dvck27/Basic_Project.git` como único remoto `origin`, rama `main`; publicar con push explícito y configurar localmente la identidad `Dave <dvck27@users.noreply.github.com>`.

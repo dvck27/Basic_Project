@@ -9,9 +9,29 @@ $RECYCLE.BIN/
 .idea/
 *.swp
 
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# Runtime local / datos de salud
+runtime/
+*.sqlite3
+*.db
+uploads/
+
 # Secretos / credenciales (NUNCA versionar)
 Token_*.txt
 *token*.txt
 *.pat
 .env
 *.key
+*.pem
+*credentials*.json
+*client_secret*.json
+*oauth*.json
